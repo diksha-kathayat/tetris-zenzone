@@ -31,81 +31,78 @@
             background-size: 20px 20px;
         }
 
-        /* Single screen viewport locking wrapper */
+        /* Compact container to guarantee zero scroll */
         #game-container {
             display: flex; flex-direction: column; align-items: center;
-            justify-content: space-between; height: 100%; max-height: 720px;
-            width: 100%; max-width: 360px; padding: 15px 10px;
+            justify-content: center; height: 95%; max-height: 520px;
+            width: 100%; max-width: 360px; padding: 5px;
         }
 
-        header { text-align: center; margin-bottom: 5px; }
-        h1 { margin: 0; font-size: 22px; color: var(--accent); font-weight: 300; letter-spacing: 2px; }
+        h1 { margin: 0 0 10px 0; font-size: 20px; color: var(--accent); font-weight: 300; letter-spacing: 2px; text-align: center; }
 
+        /* Side-by-side main engine layout */
         #game-layout {
-            display: flex; gap: 12px; align-items: center; justify-content: center; width: 100%;
+            display: flex; gap: 15px; align-items: stretch; justify-content: center; width: 100%;
         }
 
-        /* 10 columns x 20 rows - Scaled defensively for mobile height profiles */
+        /* 10x20 Grid scaled shorter for tight viewport boundaries */
         #board {
             display: grid; grid-template-columns: repeat(10, 1fr);
-            width: 190px; height: 380px; background: var(--grid-bg);
-            border: 3.5px solid #fff; border-radius: 12px; padding: 3px;
-            gap: 1.5px; box-shadow: 0 8px 20px rgba(255, 133, 161, 0.12);
+            width: 170px; height: 340px; background: var(--grid-bg);
+            border: 3px solid #fff; border-radius: 12px; padding: 2px;
+            gap: 1px; box-shadow: 0 8px 20px rgba(255, 133, 161, 0.1);
         }
 
         .cell { background: var(--cell-empty); border-radius: 2px; }
 
+        /* The master right-side tower containing stats AND inputs */
         #sidebar {
-            display: flex; flex-direction: column; gap: 10px; width: 85px;
+            display: flex; flex-direction: column; justify-content: space-between; width: 110px;
         }
 
         .side-panel {
             background: #fff; border: 1.5px solid var(--grid-bg);
-            border-radius: 10px; padding: 8px 4px; text-align: center;
-            color: var(--text); font-size: 10px; font-weight: bold;
-            box-shadow: 0 4px 8px rgba(255, 133, 161, 0.03);
+            border-radius: 10px; padding: 6px 4px; text-align: center;
+            color: var(--text); font-size: 9px; font-weight: bold;
+            box-shadow: 0 3px 6px rgba(255, 133, 161, 0.02);
         }
 
-        .panel-val { font-size: 14px; color: var(--accent); margin-top: 2px; }
+        .panel-val { font-size: 13px; color: var(--accent); margin-top: 1px; }
 
         #next-preview {
             display: grid; grid-template-columns: repeat(4, 1fr);
-            gap: 1.5px; width: 44px; height: 44px; margin: 6px auto 0;
+            gap: 1px; width: 36px; height: 36px; margin: 4px auto 0;
         }
 
-        /* Ergonomic Thumb Control Pad Grid */
+        /* Control Pad neatly packed under the preview grid */
         #controls {
             display: grid; 
             grid-template-areas: 
                 ". up ."
                 "left down right";
-            gap: 12px; width: 220px; margin-top: 5px;
+            gap: 6px; width: 110px; margin-top: 5px;
         }
 
         .ctrl-btn {
             background: #fff; border: 1.5px solid var(--accent);
-            color: var(--accent); border-radius: 50%; width: 54px; height: 54px;
-            font-size: 20px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; box-shadow: 0 4px 8px rgba(255, 133, 161, 0.08);
-            transition: background 0.1s, transform 0.1s;
+            color: var(--accent); border-radius: 50%; width: 32px; height: 32px;
+            font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 3px 6px rgba(255, 133, 161, 0.05);
         }
-        /* Touch friendly feedback handles instant responses */
-        .ctrl-btn:active { background: var(--accent); color: #fff; transform: scale(0.92); }
+        .ctrl-btn:active { background: var(--accent); color: #fff; }
 
         .btn-restart {
-            padding: 6px 20px; background: transparent;
-            color: var(--text); border: 1px solid var(--text); border-radius: 15px; 
-            font-size: 9px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
-            margin-top: 5px; margin-bottom: 5px;
+            padding: 5px; background: #fff;
+            color: var(--text); border: 1.5px solid var(--grid-bg); border-radius: 8px; 
+            font-size: 8px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+            margin-top: 5px; width: 100%; font-weight: bold;
         }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <header>
-        <h1>🎀 𝒹𝓇𝑒𝒶𝓂𝓎 𝓉𝑒𝓉𝓇𝒾𝓈 🎀</h1>
-    </header>
+    <h1>🎀 𝒹𝓇𝑒𝒶𝓂𝓎 𝓉𝑒𝓉𝓇𝒾𝓈 🎀</h1>
 
     <div id="game-layout">
         <div id="board"></div>
@@ -115,25 +112,27 @@
                 <div>SCORE</div>
                 <div id="score" class="panel-val">0</div>
             </div>
+            
             <div class="side-panel">
                 <div>LEVEL</div>
                 <div id="level" class="panel-val">1</div>
             </div>
+            
             <div class="side-panel">
                 <div>NEXT</div>
                 <div id="next-preview"></div>
             </div>
+
+            <div id="controls">
+                <div class="ctrl-btn" style="grid-area: up;" ontouchstart="control('rotate')" mousedown="control('rotate')">↻</div>
+                <div class="ctrl-btn" style="grid-area: left;" ontouchstart="control('left')" mousedown="control('left')">←</div>
+                <div class="ctrl-btn" style="grid-area: down;" ontouchstart="control('down')" mousedown="control('down')">↓</div>
+                <div class="ctrl-btn" style="grid-area: right;" ontouchstart="control('right')" mousedown="control('right')">→</div>
+            </div>
+
+            <button class="btn-restart" ontouchstart="resetGame()" onclick="resetGame()">↻ reset</button>
         </div>
     </div>
-
-    <div id="controls">
-        <div class="ctrl-btn" style="grid-area: up;" ontouchstart="control('rotate')" mousedown="control('rotate')">↻</div>
-        <div class="ctrl-btn" style="grid-area: left;" ontouchstart="control('left')" mousedown="control('left')">←</div>
-        <div class="ctrl-btn" style="grid-area: down;" ontouchstart="control('down')" mousedown="control('down')">↓</div>
-        <div class="ctrl-btn" style="grid-area: right;" ontouchstart="control('right')" mousedown="control('right')">→</div>
-    </div>
-
-    <button class="btn-restart" ontouchstart="resetGame()" onclick="resetGame()">↻ reset</button>
 </div>
 
 <script>
@@ -196,7 +195,7 @@
         if (checkCollision(currentPiece.matrix, currentPiece.x, currentPiece.y)) {
             gameOver = true;
             clearInterval(gameInterval);
-            alert(`✧ Game Over ✧\nYour final score is ${score}!`);
+            alert(`✧ Game Over ✧\nYour score: ${score}`);
         }
     }
 
@@ -263,10 +262,7 @@
             const n = currentPiece.matrix.length;
             let rotated = Array.from({ length: n }, () => Array(n).fill(0));
             for (let r = 0; r < n; r++) {
-                for (let c = 0; c < n; r++) { // Fixed bug loop definition
-                    // Internal safety block structure mapping
-                }
-                for(let c=0; c<n; c++) {
+                for (let c = 0; c < n; c++) {
                     rotated[c][n - 1 - r] = currentPiece.matrix[r][c];
                 }
             }
