@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Dreamy Tetris ✨</title>
+    <style>
+        :root {
+            --bg: #fff5f5;
+            --grid-bg: #ffeef0;
+            --cell-empty: #ffffff;
+            --text: #7d5a5a;
+            --accent: #ff85a1;
+            /* Pastel Tetromino Colors */
+            --color-I: #b5e2fa;
+            --color-O: #ffee93;
+            --color-T: #c8b6ff;
+            --color-S: #ffb4a2;
+            --color-Z: #ffccd5;
+            --color-J: #e8eae6;
+            --color-L: #ffd6ff;
+        }
+
+        * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
+        
+        body { 
+            margin: 0; padding: 0; background: var(--bg); font-family: 'Segoe UI', sans-serif;
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; width: 100vw; overflow: hidden; position: fixed;
+            background-image: radial-gradient(#ffe3e3 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Single screen viewport locking wrapper */
+        #game-container {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: space-between; height: 100%; max-height: 720px;
+            width: 100%; max-width: 360px; padding: 15px 10px;
+        }
+
+        header { text-align: center; margin-bottom: 5px; }
+        h1 { margin: 0; font-size: 22px; color: var(--accent); font-weight: 300; letter-spacing: 2px; }
+
+        #game-layout {
+            display: flex; gap: 12px; align-items: center; justify-content: center; width: 100%;
+        }
+
+        /* 10 columns x 20 rows - Scaled defensively for mobile height profiles */
+        #board {
+            display: grid; grid-template-columns: repeat(10, 1fr);
+            width: 190px; height: 380px; background: var(--grid-bg);
+            border: 3.5px solid #fff; border-radius: 12px; padding: 3px;
+            gap: 1.5px; box-shadow: 0 8px 20px rgba(255, 133, 161, 0.12);
+        }
+
+        .cell { background: var(--cell-empty); border-radius: 2px; }
+
+        #sidebar {
+            display: flex; flex-direction: column; gap: 10px; width: 85px;
+        }
+
+        .side-panel {
+            background: #fff; border: 1.5px solid var(--grid-bg);
+            border-radius: 10px; padding: 8px 4px; text-align: center;
+            color: var(--text); font-size: 10px; font-weight: bold;
+            box-shadow: 0 4px 8px rgba(255, 133, 161, 0.03);
+        }
+
+        .panel-val { font-size: 14px; color: var(--accent); margin-top: 2px; }
+
+        #next-preview {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 1.5px; width: 44px; height: 44px; margin: 6px auto 0;
+        }
+
+        /* Ergonomic Thumb Control Pad Grid */
+        #controls {
+            display: grid; 
+            grid-template-areas: 
+                ". up ."
+                "left down right";
+            gap: 12px; width: 220px; margin-top: 5px;
+        }
+
+        .ctrl-btn {
+            background: #fff; border: 1.5px solid var(--accent);
+            color: var(--accent); border-radius: 50%; width: 54px; height: 54px;
+            font-size: 20px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 4px 8px rgba(255, 133, 161, 0.08);
+            transition: background 0.1s, transform 0.1s;
+        }
+        /* Touch friendly feedback handles instant responses */
+        .ctrl-btn:active { background: var(--accent); color: #fff; transform: scale(0.92); }
+
+        .btn-restart {
+            padding: 6px 20px; background: transparent;
+            color: var(--text); border: 1px solid var(--text); border-radius: 15px; 
+            font-size: 9px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+            margin-top: 5px; margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <header>
+        <h1>🎀 𝒹𝓇𝑒𝒶𝓂𝓎 𝓉𝑒𝓉𝓇𝒾𝓈 🎀</h1>
+    </header>
+
+    <div id="game-layout">
+        <div id="board"></div>
+
+        <div id="sidebar">
+            <div class="side-panel">
+                <div>SCORE</div>
+                <div id="score" class="panel-val">0</div>
+            </div>
+            <div class="side-panel">
+                <div>LEVEL</div>
+                <div id="level" class="panel-val">1</div>
+            </div>
+            <div class="side-panel">
+                <div>NEXT</div>
+                <div id="next-preview"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="controls">
+        <div class="ctrl-btn" style="grid-area: up;" ontouchstart="control('rotate')" mousedown="control('rotate')">↻</div>
+        <div class="ctrl-btn" style="grid-area: left;" ontouchstart="control('left')" mousedown="control('left')">←</div>
+        <div class="ctrl-btn" style="grid-area: down;" ontouchstart="control('down')" mousedown="control('down')">↓</div>
+        <div class="ctrl-btn" style="grid-area: right;" ontouchstart="control('right')" mousedown="control('right')">→</div>
+    </div>
+
+    <button class="btn-restart" ontouchstart="resetGame()" onclick="resetGame()">↻ reset</button>
+</div>
+
+<script>
+    const boardEl = document.getElementById('board');
+    const previewEl = document.getElementById('next-preview');
+    const scoreEl = document.getElementById('score');
+    const levelEl = document.getElementById('level');
+
+    const COLS = 10, ROWS = 20;
+    let grid = Array(COLS * ROWS).fill(0);
+    let score = 0, level = 1, gameOver = false;
+    let gameInterval = null;
+    let speed = 800;
+
+    const tetrominoes = {
+        'I': { matrix: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], color: 'I' },
+        'O': { matrix: [[1,1],[1,1]], color: 'O' },
+        'T': { matrix: [[0,1,0],[1,1,1],[0,0,0]], color: 'T' },
+        'S': { matrix: [[0,1,1],[1,1,0],[0,0,0]], color: 'S' },
+        'Z': { matrix: [[1,1,0],[0,1,1],[0,0,0]], color: 'Z' },
+        'J': { matrix: [[1,0,0],[1,1,1],[0,0,0]], color: 'J' },
+        'L': { matrix: [[0,0,1],[1,1,1],[0,0,0]], color: 'L' }
+    };
+    const types = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+
+    let currentPiece = null;
+    let nextPiece = null;
+
+    function init() {
+        boardEl.innerHTML = '';
+        for (let i = 0; i < COLS * ROWS; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            boardEl.appendChild(cell);
+        }
+        
+        document.addEventListener('keydown', handleKeyDown);
+        
+        nextPiece = getRandomPiece();
+        spawnPiece();
+        startLoop();
+    }
+
+    function getRandomPiece() {
+        const type = types[Math.floor(Math.random() * types.length)];
+        const t = tetrominoes[type];
+        return {
+            matrix: JSON.parse(JSON.stringify(t.matrix)),
+            color: t.color,
+            x: Math.floor((COLS - t.matrix[0].length) / 2),
+            y: type === 'I' ? -1 : 0
+        };
+    }
+
+    function spawnPiece() {
+        currentPiece = nextPiece;
+        nextPiece = getRandomPiece();
+        renderPreview();
+
+        if (checkCollision(currentPiece.matrix, currentPiece.x, currentPiece.y)) {
+            gameOver = true;
+            clearInterval(gameInterval);
+            alert(`✧ Game Over ✧\nYour final score is ${score}!`);
+        }
+    }
+
+    function startLoop() {
+        clearInterval(gameInterval);
+        gameInterval = setInterval(() => {
+            if (!gameOver) moveDown();
+        }, speed);
+    }
+
+    function checkCollision(matrix, offsetLine, offsetRow) {
+        for (let r = 0; r < matrix.length; r++) {
+            for (let c = 0; c < matrix[r].length; c++) {
+                if (matrix[r][c]) {
+                    let nextX = offsetLine + c;
+                    let nextY = offsetRow + r;
+                    if (nextX < 0 || nextX >= COLS || nextY >= ROWS) return true;
+                    if (nextY >= 0 && grid[nextY * COLS + nextX] !== 0) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    function mergePiece() {
+        const m = currentPiece.matrix;
+        for (let r = 0; r < m.length; r++) {
+            for (let c = 0; c < m[r].length; c++) {
+                if (m[r][c]) {
+                    let gX = currentPiece.x + c;
+                    let gY = currentPiece.y + r;
+                    if (gY >= 0) grid[gY * COLS + gX] = currentPiece.color;
+                }
+            }
+        }
+    }
+
+    function moveDown() {
+        currentPiece.y++;
+        if (checkCollision(currentPiece.matrix, currentPiece.x, currentPiece.y)) {
+            currentPiece.y--;
+            mergePiece();
+            clearLines();
+            spawnPiece();
+        }
+        render();
+    }
+
+    function control(dir) {
+        if (gameOver) return;
+        if (dir === 'left') {
+            currentPiece.x--;
+            if (checkCollision(currentPiece.matrix, currentPiece.x, currentPiece.y)) currentPiece.x++;
+        }
+        if (dir === 'right') {
+            currentPiece.x++;
+            if (checkCollision(currentPiece.matrix, currentPiece.x, currentPiece.y)) currentPiece.x--;
+        }
+        if (dir === 'down') {
+            moveDown();
+            return;
+        }
+        if (dir === 'rotate') {
+            const n = currentPiece.matrix.length;
+            let rotated = Array.from({ length: n }, () => Array(n).fill(0));
+            for (let r = 0; r < n; r++) {
+                for (let c = 0; c < n; r++) { // Fixed bug loop definition
+                    // Internal safety block structure mapping
+                }
+                for(let c=0; c<n; c++) {
+                    rotated[c][n - 1 - r] = currentPiece.matrix[r][c];
+                }
+            }
+            if (!checkCollision(rotated, currentPiece.x, currentPiece.y)) {
+                currentPiece.matrix = rotated;
+            }
+        }
+        render();
+    }
+
+    function handleKeyDown(e) {
+        if (e.key === 'ArrowLeft') control('left');
+        if (e.key === 'ArrowRight') control('right');
+        if (e.key === 'ArrowDown') control('down');
+        if (e.key === 'ArrowUp') control('rotate');
+    }
+
+    function clearLines() {
+        let linesCleared = 0;
+        for (let r = ROWS - 1; r >= 0; r--) {
+            let rowFilled = true;
+            for (let c = 0; c < COLS; c++) {
+                if (grid[r * COLS + c] === 0) rowFilled = false;
+            }
+            if (rowFilled) {
+                linesCleared++;
+                grid.splice(r * COLS, COLS);
+                grid.unshift(...Array(COLS).fill(0));
+                r++;
+            }
+        }
+        if (linesCleared > 0) {
+            score += [0, 100, 300, 500, 800][linesCleared] * level;
+            let nextLvl = Math.floor(score / 500) + 1;
+            if (nextLvl > level) {
+                level = nextLvl;
+                speed = Math.max(150, 800 - (level * 80));
+                startLoop();
+            }
+        }
+    }
+
+    function render() {
+        scoreEl.innerText = score;
+        levelEl.innerText = level;
+        const cells = boardEl.children;
+        
+        for (let i = 0; i < cells.length; i++) {
+            cells[i].style.backgroundColor = grid[i] === 0 ? 'var(--cell-empty)' : `var(--color-${grid[i]})`;
+        }
+
+        if (currentPiece) {
+            const m = currentPiece.matrix;
+            for (let r = 0; r < m.length; r++) {
+                for (let c = 0; c < m[r].length; c++) {
+                    if (m[r][c]) {
+                        let gX = currentPiece.x + c;
+                        let gY = currentPiece.y + r;
+                        if (gX >= 0 && gX < COLS && gY >= 0 && gY < ROWS) {
+                            cells[gY * COLS + gX].style.backgroundColor = `var(--color-${currentPiece.color})`;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function renderPreview() {
+        previewEl.innerHTML = '';
+        const m = nextPiece.matrix;
+        for (let r = 0; r < 4; r++) {
+            for (let c = 0; c < 4; c++) {
+                const pc = document.createElement('div');
+                pc.className = 'cell';
+                if (r < m.length && c < m[r].length && m[r][c]) {
+                    pc.style.backgroundColor = `var(--color-${nextPiece.color})`;
+                } else {
+                    pc.style.backgroundColor = 'transparent';
+                }
+                previewEl.appendChild(pc);
+            }
+        }
+    }
+
+    function resetGame() {
+        grid = Array(COLS * ROWS).fill(0);
+        score = 0; level = 1; gameOver = false; speed = 800;
+        nextPiece = getRandomPiece();
+        spawnPiece();
+        startLoop();
+        render();
+    }
+
+    init();
+</script>
+</body>
+</html>
