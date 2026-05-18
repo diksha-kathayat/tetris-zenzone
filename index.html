@@ -11,7 +11,7 @@
             --cell-empty: #ffffff;
             --text: #7d5a5a;
             --accent: #ff85a1;
-            /* Pastel Tetromino Colors + New Block Colors */
+            /* Pastel Tetromino Colors */
             --color-I: #b5e2fa;
             --color-O: #ffee93;
             --color-T: #c8b6ff;
@@ -19,7 +19,7 @@
             --color-Z: #ffccd5;
             --color-J: #e8eae6;
             --color-L: #ffd6ff;
-            --color-X: #e2ece9; /* Color for new bonus blocks */
+            --color-X: #e2ece9; 
             --color-Y: #dfe7fd;
         }
 
@@ -36,21 +36,20 @@
         #game-layout {
             display: flex; 
             flex-direction: column;
-            gap: 8px; /* Tighter gaps to maximize space */
+            gap: 8px; 
             align-items: center; 
             justify-content: space-between; 
             width: 92vw; 
             max-width: 290px;
-            height: 82svh; /* Expanded height footprint slightly to accommodate bigger buttons */
+            height: 84svh; /* Bumped slightly to allow for roomier button gaps */
         }
 
-        /* ROW 1: Symmetrical Header Dashboard shifted further up */
         #header-dashboard {
             display: flex;
             width: 100%;
             justify-content: space-between;
             gap: 8px;
-            margin-top: -10px; /* Pulls dashboard closer to top edge */
+            margin-top: -10px; 
         }
 
         .side-panel {
@@ -86,7 +85,6 @@
             margin-top: 1px;
         }
 
-        /* ROW 2: Center Playing Field Grid */
         #board {
             display: grid; 
             grid-template-columns: repeat(10, 1fr);
@@ -102,7 +100,6 @@
 
         .cell { background: var(--cell-empty); border-radius: 2px; }
 
-        /* ROW 3: Symmetrical Large Buttons Control Base */
         #footer-action {
             display: flex;
             flex-direction: column;
@@ -111,20 +108,20 @@
             padding-bottom: 5px;
         }
 
+        /* Widened button gaps to prevent accidental overlapping taps */
         #controls {
             display: grid; 
             grid-template-areas: 
                 ". up ."
                 "left down right";
-            gap: 6px; /* Slightly wider spacing for bigger nodes */
+            gap: 12px; /* Increased from 6px for open spacing */
             justify-content: center;
         }
 
-        /* Expanded Button Footprint for reliable ergonomics */
         .ctrl-btn {
             background: #fff; border: 1.5px solid var(--accent);
             color: var(--accent); border-radius: 50%; 
-            width: 46px; height: 46px; /* Increased from 38px */
+            width: 46px; height: 46px; 
             font-size: 16px; font-weight: bold; display: flex; align-items: center; justify-content: center;
             cursor: pointer; box-shadow: 0 3px 8px rgba(255, 133, 161, 0.06);
         }
@@ -185,9 +182,7 @@
     let gameInterval = null;
     let speed = 800;
 
-    // --- EXPANDED BLOCK MATRIX LIST ---
     const tetrominoes = {
-        // Classic 7 Shapes
         'I': { matrix: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], color: 'I' },
         'O': { matrix: [[1,1],[1,1]], color: 'O' },
         'T': { matrix: [[0,1,0],[1,1,1],[0,0,0]], color: 'T' },
@@ -195,11 +190,10 @@
         'Z': { matrix: [[1,1,0],[0,1,1],[0,0,0]], color: 'Z' },
         'J': { matrix: [[1,0,0],[1,1,1],[0,0,0]], color: 'J' },
         'L': { matrix: [[0,0,1],[1,1,1],[0,0,0]], color: 'L' },
-        // New Bonus Blocks!
-        'DOT': { matrix: [[1]], color: 'X' },                             // 1x1 Mini Dot
-        'MINII': { matrix: [[1,1]], color: 'Y' },                          // 1x2 Small Line
-        'CORNER': { matrix: [[1,1],[1,0]], color: 'X' },                   // Small 3-block L
-        'SHORTL': { matrix: [[1,0,0],[1,1,1],[0,0,0]], color: 'Y' }        // Short Asymmetric Hook
+        'DOT': { matrix: [[1]], color: 'X' },                             
+        'MINII': { matrix: [[1,1]], color: 'Y' },                          
+        'CORNER': { matrix: [[1,1],[1,0]], color: 'X' },                   
+        'SHORTL': { matrix: [[1,0,0],[1,1,1],[0,0,0]], color: 'Y' }        
     };
     const types = ['I', 'O', 'T', 'S', 'Z', 'J', 'L', 'DOT', 'MINII', 'CORNER', 'SHORTL'];
 
