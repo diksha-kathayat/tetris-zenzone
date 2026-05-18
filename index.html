@@ -11,7 +11,7 @@
             --cell-empty: #ffffff;
             --text: #7d5a5a;
             --accent: #ff85a1;
-            /* Pastel Tetromino Colors */
+            /* Pastel Tetromino Colors + New Block Colors */
             --color-I: #b5e2fa;
             --color-O: #ffee93;
             --color-T: #c8b6ff;
@@ -19,6 +19,8 @@
             --color-Z: #ffccd5;
             --color-J: #e8eae6;
             --color-L: #ffd6ff;
+            --color-X: #e2ece9; /* Color for new bonus blocks */
+            --color-Y: #dfe7fd;
         }
 
         * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
@@ -34,30 +36,31 @@
         #game-layout {
             display: flex; 
             flex-direction: column;
-            gap: 12px; 
+            gap: 8px; /* Tighter gaps to maximize space */
             align-items: center; 
             justify-content: space-between; 
-            width: 90vw; 
-            max-width: 280px;
-            height: 75svh; 
+            width: 92vw; 
+            max-width: 290px;
+            height: 82svh; /* Expanded height footprint slightly to accommodate bigger buttons */
         }
 
-        /* ROW 1: Symmetrical Header Dashboard with Integrated Reset */
+        /* ROW 1: Symmetrical Header Dashboard shifted further up */
         #header-dashboard {
             display: flex;
             width: 100%;
             justify-content: space-between;
             gap: 8px;
+            margin-top: -10px; /* Pulls dashboard closer to top edge */
         }
 
         .side-panel {
             background: #fff; 
             border: 1.5px solid var(--grid-bg);
             border-radius: 10px; 
-            padding: 6px; 
+            padding: 4px 6px; 
             text-align: center;
             color: var(--text); 
-            font-size: 9px; 
+            font-size: 8.5px; 
             font-weight: bold;
             flex: 1;
             display: flex;
@@ -67,10 +70,9 @@
             box-shadow: 0 4px 10px rgba(255, 133, 161, 0.02);
         }
 
-        /* Center column specifically styled to stack LEVEL and RESET vertically */
         .center-panel {
             justify-content: space-between;
-            gap: 4px;
+            gap: 2px;
         }
 
         .panel-val { font-size: 13px; color: var(--accent); margin-top: 1px; font-weight: 800; }
@@ -79,12 +81,12 @@
             display: grid; 
             grid-template-columns: repeat(4, 1fr);
             gap: 1px; 
-            width: 28px; 
-            height: 28px; 
-            margin-top: 2px;
+            width: 26px; 
+            height: 26px; 
+            margin-top: 1px;
         }
 
-        /* ROW 2: Perfectly Centered Game Board */
+        /* ROW 2: Center Playing Field Grid */
         #board {
             display: grid; 
             grid-template-columns: repeat(10, 1fr);
@@ -100,13 +102,13 @@
 
         .cell { background: var(--cell-empty); border-radius: 2px; }
 
-        /* ROW 3: Pure Controller Cluster at the Bottom */
+        /* ROW 3: Symmetrical Large Buttons Control Base */
         #footer-action {
             display: flex;
             flex-direction: column;
             align-items: center;
             width: 100%;
-            padding: 2px 0;
+            padding-bottom: 5px;
         }
 
         #controls {
@@ -114,27 +116,26 @@
             grid-template-areas: 
                 ". up ."
                 "left down right";
-            gap: 5px;
+            gap: 6px; /* Slightly wider spacing for bigger nodes */
             justify-content: center;
         }
 
+        /* Expanded Button Footprint for reliable ergonomics */
         .ctrl-btn {
             background: #fff; border: 1.5px solid var(--accent);
-            color: var(--accent); border-radius: 50%; width: 38px; height: 38px;
-            font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; box-shadow: 0 3px 6px rgba(255, 133, 161, 0.04);
+            color: var(--accent); border-radius: 50%; 
+            width: 46px; height: 46px; /* Increased from 38px */
+            font-size: 16px; font-weight: bold; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 3px 8px rgba(255, 133, 161, 0.06);
         }
         .ctrl-btn:active { background: var(--accent); color: #fff; }
 
-        /* Top-aligned standard Reset Button */
         .btn-restart {
-            padding: 2px 8px; background: #fff;
-            color: var(--text); border: 1px solid var(--grid-bg); border-radius: 6px; 
+            padding: 1px 6px; background: #fff;
+            color: var(--text); border: 1px solid var(--grid-bg); border-radius: 5px; 
             font-size: 7px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
             font-weight: bold; width: 100%;
-            transition: all 0.1s;
         }
-        .btn-restart:active { background: var(--grid-bg); }
     </style>
 </head>
 <body>
@@ -184,16 +185,23 @@
     let gameInterval = null;
     let speed = 800;
 
+    // --- EXPANDED BLOCK MATRIX LIST ---
     const tetrominoes = {
+        // Classic 7 Shapes
         'I': { matrix: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], color: 'I' },
         'O': { matrix: [[1,1],[1,1]], color: 'O' },
         'T': { matrix: [[0,1,0],[1,1,1],[0,0,0]], color: 'T' },
         'S': { matrix: [[0,1,1],[1,1,0],[0,0,0]], color: 'S' },
         'Z': { matrix: [[1,1,0],[0,1,1],[0,0,0]], color: 'Z' },
         'J': { matrix: [[1,0,0],[1,1,1],[0,0,0]], color: 'J' },
-        'L': { matrix: [[0,0,1],[1,1,1],[0,0,0]], color: 'L' }
+        'L': { matrix: [[0,0,1],[1,1,1],[0,0,0]], color: 'L' },
+        // New Bonus Blocks!
+        'DOT': { matrix: [[1]], color: 'X' },                             // 1x1 Mini Dot
+        'MINII': { matrix: [[1,1]], color: 'Y' },                          // 1x2 Small Line
+        'CORNER': { matrix: [[1,1],[1,0]], color: 'X' },                   // Small 3-block L
+        'SHORTL': { matrix: [[1,0,0],[1,1,1],[0,0,0]], color: 'Y' }        // Short Asymmetric Hook
     };
-    const types = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+    const types = ['I', 'O', 'T', 'S', 'Z', 'J', 'L', 'DOT', 'MINII', 'CORNER', 'SHORTL'];
 
     let currentPiece = null;
     let nextPiece = null;
